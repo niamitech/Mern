@@ -1,31 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Register from './Register';
+import Login from './Login';
+import Dashboard from './Dashboard';
 
-const API = process.env.REACT_APP_API_URL;
 function App() {
-  const [status, setStatus] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token') || '');
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    axios.get(`${API}/api/status`)
-      .then((res) => {
-        setStatus(res.data);
-      })
-      .catch((err) => {
-        setStatus({ success: false, message: "Failed to fetch API status" });
-      });
-  }, []);
+    if (token) {
+      axios
+        .get('/api/protected', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then(res => setUser(res.data))
+        .catch(() => setUser(null));
+    }
+  }, [token]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setToken('');
+    setUser(null);
+  };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>MERN Stack Health Check</h1>
-      {status ? (
-        <div>
-          <p><strong>Status:</strong> {status.success ? '✅ OK' : '❌ Failed'}</p>
-          <p><strong>Message:</strong> {status.message}</p>
-          <p><strong>Time:</strong> {new Date(status.timestamp).toLocaleString()}</p>
-        </div>
+    <div style={{ padding: 20 }}>
+      <h1>MERN Auth App</h1>
+      {!token ? (
+        <>
+          <Register />
+          <Login setToken={setToken} />
+        </>
       ) : (
-        <p>Loading API status...</p>
+        <>
+          <Dashboard user={user} />
+          <button onClick={handleLogout}>Logout</button>
+        </>
       )}
     </div>
   );
