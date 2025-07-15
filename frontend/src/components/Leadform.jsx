@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+
 const API = process.env.REACT_APP_API_URL;
 
 function LeadForm() {
   const [lead, setLead] = useState({
     name: '',
     email: '',
-    phone: '',
-    message: '',
-    source: 'Website'
+    message: ''
   });
 
   const handleChange = (e) => {
@@ -20,16 +19,18 @@ function LeadForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!lead.name || !lead.email) {
-      alert('Please fill name and email.');
+
+    if (!lead.name || !lead.email || !lead.message) {
+      alert('Please fill all fields before submitting.');
       return;
     }
 
     try {
       const response = await axios.post(`${API}/api/leads`, lead);
+;
       if (response.data.success) {
         alert('Lead submitted');
-        setLead({ name: '', email: '', phone: '', message: '', source: 'Website' });
+        setLead({ name: '', email: '', message: '' });
       } else {
         alert('Submission failed');
       }
@@ -42,17 +43,17 @@ function LeadForm() {
     <div style={{ padding: '2rem' }}>
       <h2>Submit a Lead</h2>
       <form onSubmit={handleSubmit}>
-        <div><label>Name:</label><br /><input type="text" name="name" value={lead.name} onChange={handleChange} /></div>
-        <div><label>Email:</label><br /><input type="email" name="email" value={lead.email} onChange={handleChange} /></div>
-        <div><label>Phone:</label><br /><input type="text" name="phone" value={lead.phone} onChange={handleChange} /></div>
-        <div><label>Message:</label><br /><textarea name="message" value={lead.message} onChange={handleChange} /></div>
-        <div><label>Source:</label><br />
-          <select name="source" value={lead.source} onChange={handleChange}>
-            <option>Website</option>
-            <option>Ad Campaign</option>
-            <option>Referral</option>
-            <option>Social Media</option>
-          </select>
+        <div>
+          <label>Name:</label><br />
+          <input type="text" name="name" value={lead.name} onChange={handleChange} />
+        </div>
+        <div>
+          <label>Email:</label><br />
+          <input type="email" name="email" value={lead.email} onChange={handleChange} />
+        </div>
+        <div>
+          <label>Message:</label><br />
+          <textarea name="message" value={lead.message} onChange={handleChange} />
         </div>
         <br />
         <button type="submit">Submit Lead</button>
