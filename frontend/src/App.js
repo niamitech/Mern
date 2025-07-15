@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+
+import LeadForm from './components/LeadForm';
 
 const API = process.env.REACT_APP_API_URL;
-function App() {
+
+function Home() {
   const [status, setStatus] = useState(null);
 
   useEffect(() => {
@@ -10,7 +14,7 @@ function App() {
       .then((res) => {
         setStatus(res.data);
       })
-      .catch((err) => {
+      .catch(() => {
         setStatus({ success: false, message: "Failed to fetch API status" });
       });
   }, []);
@@ -27,7 +31,20 @@ function App() {
       ) : (
         <p>Loading API status...</p>
       )}
+      <br />
+      <Link to="/lead-form">Submit a Lead</Link>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/lead-form" element={<LeadForm />} />
+      </Routes>
+    </Router>
   );
 }
 

@@ -5,21 +5,22 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-
+// Routes
 const statusRoutes = require('./routes/status');
+const leadRoutes = require('./routes/leads');
 app.use('/api/status', statusRoutes);
+app.use('/api/leads', leadRoutes);
 
-
-// DB Connection
+// MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
-}).then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log(err));
+})
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => console.error(err));
 
 // Start server
 const PORT = process.env.PORT || 5000;
