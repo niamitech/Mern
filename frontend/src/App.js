@@ -1,46 +1,95 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import Register from './Register';
-import Login from './Login';
-import Dashboard from './Dashboard';
+import React, { useState, useEffect } from 'react';
 
-function App() {
-  const [token, setToken] = useState(localStorage.getItem('token') || '');
-  const [user, setUser] = useState(null);
+const FormWithValidation = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
 
-  useEffect(() => {
-    if (token) {
-      axios
-        .get('/api/protected', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then(res => setUser(res.data))
-        .catch(() => setUser(null));
+  const [errors, setErrors] = useState({});
+  const [isSubmitEnabled, setIsSubmitEnabled] = useState(false);
+
+  const validate = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
     }
-  }, [token]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setToken('');
-    setUser(null);
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    return newErrors;
+  };
+
+  // Real-time validation
+  useEffect(() => {
+    const newErrors = validate();
+    setErrors(newErrors);
+    setIsSubmitEnabled(Object.keys(newErrors).length === 0);
+  }, [formData]);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    alert('Form submitted successfully!');
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>MERN Auth App</h1>
-      {!token ? (
-        <>
-          <Register />
-          <Login setToken={setToken} />
-        </>
-      ) : (
-        <>
-          <Dashboard user={user} />
-          <button onClick={handleLogout}>Logout</button>
-        </>
-      )}
-    </div>
-  );
-}
+    <form onSubmit={handleSubmit} noValidate style={{ maxWidth: '400px', margin: 'auto' }}>
+      <div>
+        <label>Name:</label>
+        <input
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+        />
+        {errors.name && <p style={{ color: 'red' }}>{errors.name}</p>}
+      </div>
 
-export default App;
+      <div>
+        <label>Email:</label>
+        <input
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+        />
+        {errors.email && <p style={{ color: 'red' }}>{errors.email}</p>}
+      </div>
+
+      <div>
+        <label>Password:</label>
+        <input
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+        />
+        {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
+      </div>
+
+      <button type="submit" disabled={!isSubmitEnabled}>
+        Submit
+      </button>
+    </form>
+  );
+};
+
+export default FormWithValidation;
