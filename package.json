@@ -13,5 +13,8 @@
   "type": "commonjs",
   "devDependencies": {
     "concurrently": "^9.2.0"
+  },
+  "dependencies": {
+    "@sendgrid/mail": "^8.1.5"
   }
 }
