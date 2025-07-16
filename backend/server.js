@@ -3,16 +3,17 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-const app = express();
+const app = express(); // ✅ define app before using it
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-
+// Routes
 const statusRoutes = require('./routes/status');
+const leadRoutes = require('./routes/leads');
 app.use('/api/status', statusRoutes);
-
+app.use('/api/leads', leadRoutes); // ✅ moved after app is defined
 
 // DB Connection
 mongoose.connect(process.env.MONGO_URI, {
