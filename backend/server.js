@@ -8,16 +8,28 @@ app.use(cors({
   credentials: true
 }));
 
-// Other middlewares
+// Middlewares
 app.use(express.json());
 
 // Routes
 const leadRoutes = require('./routes/leads');
 app.use('/api/leads', leadRoutes);
 
-// (Optional) Status check route
+// ✅ Health check route (can be used optionally)
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    time: new Date().toISOString(),
+  });
+});
+
+// ✅ Main API status route expected by React
 app.get('/api/status', (req, res) => {
-  res.send({ status: 'Server is running' });
+  res.send({
+    success: true,
+    message: 'API is healthy!',
+    timestamp: new Date().toISOString()
+  });
 });
 
 const PORT = process.env.PORT || 5000;
