@@ -1,5 +1,9 @@
 import React from "react";
 import LeadAnalyticsDashboard from "./components/LeadAnalyticsDashboard";
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
+
+// Inside Routes
+<Route path="/analytics" element={<AnalyticsDashboard />} />
 
 function App() {
   return (
