@@ -1,9 +1,11 @@
 const express = require('express');
 const multer = require('multer');
 const router = express.Router();
+const { importLeads } = require('../controllers/leadController');
 const upload = multer();
 
 const Lead = require('../models/Lead');
+
 const { parseExcel, generateExcel } = require('../utils/csvHelper');
 
 router.post('/import', upload.single('file'), async (req, res) => {
@@ -19,7 +21,7 @@ router.post('/import', upload.single('file'), async (req, res) => {
 
 router.get('/export', async (req, res) => {
   try {
-    const leads = await Lead.find().lean();
+    // const leads = await Lead.find().lean();
     const buffer = generateExcel(leads);
     res.setHeader('Content-Disposition', 'attachment; filename=leads.xlsx');
     res.setHeader(

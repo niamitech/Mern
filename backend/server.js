@@ -1,21 +1,22 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
+require('dotenv').config();
+
 const app = express();
 
-// ✅ Allow frontend to access backend
+// ✅ Middleware
 app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true
 }));
-
-// Middlewares
 app.use(express.json());
 
-// Routes
+// ✅ Routes
 const leadRoutes = require('./routes/leads');
 app.use('/api/leads', leadRoutes);
 
-// ✅ Health check route (can be used optionally)
+// ✅ Health check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -23,7 +24,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ✅ Main API status route expected by React
+// ✅ API status route for frontend
 app.get('/api/status', (req, res) => {
   res.send({
     success: true,
@@ -32,5 +33,17 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// ✅ Connect to MongoDB and start server
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => {
+  console.log('✅ MongoDB connected');
+
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+})
+.catch((err) => {
+  console.error('❌ MongoDB connection error:', err.message);
+});

@@ -1,76 +1,57 @@
 const express = require('express');
-const router = express.Router();
 const multer = require('multer');
-const upload = multer();
-
+const csvParser = require('csv-parser');
+const fs = require('fs');
+const path = require('path');
 const Lead = require('../models/Lead');
-const sendEmail = require('../utils/sendEmail');
-const { parseExcel, generateExcel } = require('../utils/csvHelper');
 
-// ✅ POST /api/leads — Create lead and send email
-router.post('/', async (req, res) => {
-  try {
-    const { name, email, source, tags } = req.body;
-    const score = Math.floor(Math.random() * 100);
+const router = express.Router();
 
-    const lead = new Lead({ name, email, source, score, tags });
-    await lead.save();
+// File upload config
+const upload = multer({ dest: 'uploads/' });
 
-    await sendEmail(email, score);
-
-    res.status(200).json({ message: 'Lead saved and email sent', score });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to save lead or send email', error: err });
-  }
-});
-
-// ✅ GET /api/leads — Get all leads
-router.get('/', async (req, res) => {
-  try {
-    const leads = await Lead.find();
-    res.json(leads);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch leads', error: err });
-  }
-});
-
-// ✅ PUT /api/leads/:id/tags — Update lead tags
-router.put('/:id/tags', async (req, res) => {
-  try {
-    const { tags } = req.body;
-    const lead = await Lead.findByIdAndUpdate(req.params.id, { tags }, { new: true });
-    res.json(lead);
-  } catch (err) {
-    res.status(500).json({ message: 'Error updating tags', error: err });
-  }
-});
-
-// ✅ POST /api/leads/import — Import leads from Excel/CSV
+// 📥 Import leads from CSV
 router.post('/import', upload.single('file'), async (req, res) => {
-  try {
-    const data = parseExcel(req.file.buffer);
-    const leads = await Lead.insertMany(data);
-    res.json({ message: 'Leads imported successfully', count: leads.length });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to import leads' });
-  }
-});
+  const filePath = req.file.path;
+  const leads = [];
 
-// ✅ GET /api/leads/export — Export all leads to Excel
+  fs.createReadStream(filePath)
+    .pipe(csvParser())
+    .on('data', (row) => {
+      leads.push(row);
+    })
+    .on('end', async () => {
+      try {
+        await Lead.insertMany(leads);
+        fs.unlinkSync(filePath); // cleanup
+        res.json({ success: true, message: 'Leads imported successfully!' });
+      } catch (err) {
+        console.error('❌ Import error:', err);
+        res.status(500).json({ success: false, error: 'Failed to import leads.' });
+      }
+    });
+});
+const exportDir = path.join(__dirname, '..', 'exports');
+if (!fs.existsSync(exportDir)) {
+  fs.mkdirSync(exportDir);
+}
+// 📤 Export leads to CSV
 router.get('/export', async (req, res) => {
   try {
-    const leads = await Lead.find().lean();
-    const buffer = generateExcel(leads);
-    res.setHeader('Content-Disposition', 'attachment; filename=leads.xlsx');
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    );
-    res.send(buffer);
+    const leads = await Lead.find();
+
+    const csvHeaders = Object.keys(leads[0]?._doc || {}).join(',') + '\n';
+    const csvData = leads.map(lead => Object.values(lead._doc).join(',')).join('\n');
+
+    const filePath = path.join(__dirname, '../exports/leads.csv');
+    fs.writeFileSync(filePath, csvHeaders + csvData);
+
+    res.download(filePath, 'leads.csv', () => {
+      fs.unlinkSync(filePath);
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to export leads' });
+    console.error('❌ Export error:', err);
+    res.status(500).json({ success: false, error: 'Failed to export leads.' });
   }
 });
 
