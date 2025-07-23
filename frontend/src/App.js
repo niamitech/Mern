@@ -1,32 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import ABFormA from "./components/ABFormA";
+import ABFormB from "./components/ABFormB";
 
-const API = process.env.REACT_APP_API_URL;
 function App() {
-  const [status, setStatus] = useState(null);
+  const [version, setVersion] = useState(null);
 
   useEffect(() => {
-    axios.get(`${API}/api/status`)
-      .then((res) => {
-        setStatus(res.data);
-      })
-      .catch((err) => {
-        setStatus({ success: false, message: "Failed to fetch API status" });
-      });
+    // Only set once when component mounts
+    const chosen = Math.random() < 0.5 ? "A" : "B";
+    setVersion(chosen);
   }, []);
 
+  if (!version) return <p>Loading A/B test...</p>;
+
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>MERN Stack Health Check</h1>
-      {status ? (
-        <div>
-          <p><strong>Status:</strong> {status.success ? '✅ OK' : '❌ Failed'}</p>
-          <p><strong>Message:</strong> {status.message}</p>
-          <p><strong>Time:</strong> {new Date(status.timestamp).toLocaleString()}</p>
-        </div>
-      ) : (
-        <p>Loading API status...</p>
-      )}
+    <div style={{ padding: "2rem" }}>
+      <h2>A/B Test Lead Capture</h2>
+      {version === "A" ? <ABFormA /> : <ABFormB />}
     </div>
   );
 }
