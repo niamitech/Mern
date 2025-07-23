@@ -1,32 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React from 'react';
+import LeadForm from './components/LeadForm';
+import Dashboard from './components/Dashboard';
+import LeadReport from './components/LeadReport';
+import Recommendations from './components/Recommendations';
 
-const API = process.env.REACT_APP_API_URL;
 function App() {
-  const [status, setStatus] = useState(null);
-
-  useEffect(() => {
-    axios.get(`${API}/api/status`)
-      .then((res) => {
-        setStatus(res.data);
-      })
-      .catch((err) => {
-        setStatus({ success: false, message: "Failed to fetch API status" });
-      });
-  }, []);
-
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>MERN Stack Health Check</h1>
-      {status ? (
-        <div>
-          <p><strong>Status:</strong> {status.success ? '✅ OK' : '❌ Failed'}</p>
-          <p><strong>Message:</strong> {status.message}</p>
-          <p><strong>Time:</strong> {new Date(status.timestamp).toLocaleString()}</p>
-        </div>
-      ) : (
-        <p>Loading API status...</p>
-      )}
+    <div className="p-4 space-y-6">
+      <h1 className="text-3xl font-bold">Lead Management Dashboard</h1>
+      <LeadForm />
+      <Dashboard />
+      <LeadReport />
+      <Recommendations />
     </div>
   );
 }
