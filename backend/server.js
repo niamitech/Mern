@@ -1,26 +1,53 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
 require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
+const rateLimit = require('express-rate-limit');
+const apiRoutes = require('./routes/api');
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Create HTTP server and bind Socket.IO
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*', // You can restrict this to your frontend URL
+    methods: ['GET', 'POST']
+  }
+});
+
 app.use(cors());
 app.use(express.json());
 
+// Rate limiter config (optional, but keep if you want)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    status: 429,
+    message: "Too many requests from this IP, please try again later."
+  }
+});
 
-const statusRoutes = require('./routes/status');
-app.use('/api/status', statusRoutes);
+app.use('/api', apiLimiter);
 
+// Pass io instance to routes so they can emit events
+app.use('/api', (req, res, next) => {
+  req.io = io;
+  next();
+}, apiRoutes);
 
-// DB Connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log(err));
+// Socket.IO connection
+io.on('connection', (socket) => {
+  console.log('New client connected', socket.id);
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  socket.on('disconnect', () => {
+    console.log('Client disconnected', socket.id);
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
