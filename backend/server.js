@@ -13,6 +13,8 @@ app.use(express.json());
 const statusRoutes = require('./routes/status');
 app.use('/api/status', statusRoutes);
 
+const campaignRoutes = require('./routes/campaigns');
+app.use('/api/campaigns', campaignRoutes);
 
 // DB Connection
 mongoose.connect(process.env.MONGO_URI, {
