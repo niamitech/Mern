@@ -1,32 +1,52 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 
-const API = process.env.REACT_APP_API_URL;
 function App() {
-  const [status, setStatus] = useState(null);
+  const [response, setResponse] = useState('');
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    axios.get(`${API}/api/status`)
-      .then((res) => {
-        setStatus(res.data);
-      })
-      .catch((err) => {
-        setStatus({ success: false, message: "Failed to fetch API status" });
-      });
-  }, []);
+  const fetchData = async () => {
+    setError('');
+    setResponse('');
+    try {
+      const res = await fetch('http://localhost:5000/api/data');
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || 'Error fetching data');
+      }
+      const data = await res.json();
+      setResponse(JSON.stringify(data, null, 2));
+    } catch (e) {
+      setError(e.message);
+    }
+  };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>MERN Stack Health Check</h1>
-      {status ? (
-        <div>
-          <p><strong>Status:</strong> {status.success ? '✅ OK' : '❌ Failed'}</p>
-          <p><strong>Message:</strong> {status.message}</p>
-          <p><strong>Time:</strong> {new Date(status.timestamp).toLocaleString()}</p>
-        </div>
-      ) : (
-        <p>Loading API status...</p>
+    <div style={{ padding: '2rem', fontFamily: 'Arial' }}>
+      <h1>API Rate Limiting Demo</h1>
+      <button onClick={fetchData}>Fetch Data from API</button>
+
+      {response && (
+        <pre
+          style={{
+            background: '#f0f0f0',
+            padding: '1rem',
+            marginTop: '1rem',
+            borderRadius: '5px',
+          }}
+        >
+          {response}
+        </pre>
       )}
+
+      {error && (
+        <p style={{ color: 'red', marginTop: '1rem' }}>
+          Error: {error}
+        </p>
+      )}
+
+      <p style={{ marginTop: '2rem', color: '#666' }}>
+        You can only make 10 requests per 15 minutes.
+      </p>
     </div>
   );
 }

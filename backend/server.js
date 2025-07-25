@@ -1,26 +1,32 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
 require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const apiRoutes = require('./routes/api');
 
 const app = express();
 
-// Middleware
+const PORT = process.env.PORT || 5000;
+
 app.use(cors());
 app.use(express.json());
 
+// Rate limiter config from env
+const apiLimiter = rateLimit({
+  windowMs: (process.env.RATE_LIMIT_WINDOW_MINUTES || 15) * 60 * 1000,
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 10,
+  message: {
+    status: 429,
+    message: "Too many requests from this IP, please try again later."
+  }
+});
 
-const statusRoutes = require('./routes/status');
-app.use('/api/status', statusRoutes);
+// Apply limiter only on API routes
+app.use('/api', apiLimiter);
 
+// Use your routes
+app.use('/api', apiRoutes);
 
-// DB Connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log(err));
-
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
