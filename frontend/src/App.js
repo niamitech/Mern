@@ -1,31 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 
-const API = process.env.REACT_APP_API_URL;
 function App() {
-  const [status, setStatus] = useState(null);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState('');
 
+  // Check URL on load for token (after OAuth redirect)
   useEffect(() => {
-    axios.get(`${API}/api/status`)
-      .then((res) => {
-        setStatus(res.data);
-      })
-      .catch((err) => {
-        setStatus({ success: false, message: "Failed to fetch API status" });
-      });
+    const params = new URLSearchParams(window.location.search);
+    const tokenFromUrl = params.get('token');
+    if (tokenFromUrl) {
+      setToken(tokenFromUrl);
+      // Decode token payload (simple decode without validation)
+      const payload = JSON.parse(atob(tokenFromUrl.split('.')[1]));
+      setUser(payload);
+      // Clean URL params
+      window.history.replaceState({}, document.title, "/");
+    }
   }, []);
 
+  const loginUrl = 'http://localhost:5000/auth/google';
+
+  const logout = () => {
+    setUser(null);
+    setToken('');
+  };
+
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>MERN Stack Health Check</h1>
-      {status ? (
-        <div>
-          <p><strong>Status:</strong> {status.success ? '✅ OK' : '❌ Failed'}</p>
-          <p><strong>Message:</strong> {status.message}</p>
-          <p><strong>Time:</strong> {new Date(status.timestamp).toLocaleString()}</p>
-        </div>
+    <div style={{ padding: 20, fontFamily: 'Arial' }}>
+      <h1>Social Login with Google OAuth</h1>
+
+      {!user ? (
+        <a href={loginUrl}>
+          <button>Login with Google</button>
+        </a>
       ) : (
-        <p>Loading API status...</p>
+        <div>
+          <h2>Welcome, {user.displayName}</h2>
+          {user.photos && user.photos.length > 0 && (
+            <img src={user.photos[0].value} alt="Profile" width={80} style={{ borderRadius: '50%' }} />
+          )}
+          <p>Email: {user.emails?.[0]?.value}</p>
+          <button onClick={logout}>Logout</button>
+        </div>
       )}
     </div>
   );
