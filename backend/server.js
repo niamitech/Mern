@@ -9,10 +9,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-
+// Routes
 const statusRoutes = require('./routes/status');
+const leadRoutes = require('./routes/leads');
 app.use('/api/status', statusRoutes);
-
+app.use('/api/leads', leadRoutes);
 
 // DB Connection
 mongoose.connect(process.env.MONGO_URI, {
