@@ -1,23 +1,35 @@
-import React, { useState, useEffect } from "react";
-import ABFormA from "./components/ABFormA";
-import ABFormB from "./components/ABFormB";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import FormA from './components/FormA';
+import FormB from './components/FormB';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 function App() {
-  const [version, setVersion] = useState(null);
+  const [variant, setVariant] = useState(null);
 
   useEffect(() => {
-    // Only set once when component mounts
-    const chosen = Math.random() < 0.5 ? "A" : "B";
-    setVersion(chosen);
+    axios.get(`${process.env.REACT_APP_API_URL}/variant`)
+      .then(response => setVariant(response.data))
+      .catch(error => console.error('Error fetching variant:', error));
   }, []);
 
-  if (!version) return <p>Loading A/B test...</p>;
-
   return (
-    <div style={{ padding: "2rem" }}>
-      <h2>A/B Test Lead Capture</h2>
-      {version === "A" ? <ABFormA /> : <ABFormB />}
-    </div>
+    <Router>
+      <div className="container">
+        <h1>Lead Generation A/B Testing</h1>
+        <Routes>
+          <Route path="/" element={
+            variant ? (
+              variant.name === 'Variant A' ? <FormA variantId={variant._id} /> : <FormB variantId={variant._id} />
+            ) : (
+              <p>Loading...</p>
+            )
+          } />
+          <Route path="/analytics" element={<AnalyticsDashboard />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
