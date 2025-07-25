@@ -1,32 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React from 'react';
 
-const API = process.env.REACT_APP_API_URL;
+const API_BASE = 'http://localhost:5000/api';
+
 function App() {
-  const [status, setStatus] = useState(null);
+  const downloadExcel = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/export/excel`);
+      if (!response.ok) throw new Error('Failed to download file');
 
-  useEffect(() => {
-    axios.get(`${API}/api/status`)
-      .then((res) => {
-        setStatus(res.data);
-      })
-      .catch((err) => {
-        setStatus({ success: false, message: "Failed to fetch API status" });
-      });
-  }, []);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'leads.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert(error.message);
+    }
+  };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>MERN Stack Health Check</h1>
-      {status ? (
-        <div>
-          <p><strong>Status:</strong> {status.success ? '✅ OK' : '❌ Failed'}</p>
-          <p><strong>Message:</strong> {status.message}</p>
-          <p><strong>Time:</strong> {new Date(status.timestamp).toLocaleString()}</p>
-        </div>
-      ) : (
-        <p>Loading API status...</p>
-      )}
+    <div style={{ padding: 20, fontFamily: 'Arial' }}>
+      <h1>Export Leads to Excel</h1>
+      <button onClick={downloadExcel}>Download Leads Excel</button>
     </div>
   );
 }
