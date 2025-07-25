@@ -1,40 +1,75 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-export default function ABTestForm() {
+const ABTestForm = () => {
   const [variant, setVariant] = useState("A");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    source: "",
+  });
 
   useEffect(() => {
-    // Randomly assign A or B only once when component mounts
-    const assigned = Math.random() < 0.5 ? "A" : "B";
-    setVariant("B");
+    const random = Math.random() < 0.5 ? "A" : "B";
+    setVariant(random);
+    axios.post("http://localhost:5000/api/abtest", { variant: random, action: "view" });
   }, []);
+
+  const handleChange = (e) =>
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = {
-      name: e.target.name.value,
-      email: e.target.email.value,
+    console.log("ABTestForm submit:", variant, formData);
+    await axios.post("http://localhost:5000/api/abtest", {
       variant,
-    };
-
-    await fetch("/api/abtest", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      action: "submit",
     });
-
-    // After submitting A or B, show a confirmation or switch to B
-    alert(`Variant ${variant} submitted successfully.`);
-    // Optional: Switch variant for next render
-    // setVariant(variant === "A" ? "B" : "A");
+    alert(`Form submitted (Variant ${variant})`);
+    setFormData({ name: "", email: "", phone: "", source: "" });
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Lead Form Variant {variant}</h2>
-      <input name="name" placeholder="Name" required />
-      <input name="email" placeholder="Email" required />
-      <button type="submit">Submit</button>
-    </form>
+    <div>
+      <h2>Lead Generation Form – Variant {variant}</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          name="name"
+          placeholder="Name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+        {variant === "B" && (
+          <>
+            <input
+              name="phone"
+              placeholder="Phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+            />
+            <input
+              name="source"
+              placeholder="How did you find us?"
+              value={formData.source}
+              onChange={handleChange}
+            />
+          </>
+        )}
+        <button type="submit">Submit</button>
+      </form>
+    </div>
   );
-}
+};
+
+export default ABTestForm;

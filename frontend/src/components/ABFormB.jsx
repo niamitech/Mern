@@ -6,6 +6,7 @@ function ABFormB() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Submitting B:", form);
     await axios.post("http://localhost:5000/api/abtest/submit", {
       ...form,
       formVersion: "B",
@@ -17,11 +18,23 @@ function ABFormB() {
     <form onSubmit={handleSubmit}>
       <h3>Form Version B</h3>
       <label>Name</label>
-      <input onChange={(e) => setForm({ ...form, name: e.target.value })} />
+      <input
+        value={form.name}
+        onChange={(e) => setForm({ ...form, name: e.target.value })}
+        required
+      />
       <label>Email</label>
-      <input onChange={(e) => setForm({ ...form, email: e.target.value })} />
+      <input
+        type="email"
+        value={form.email}
+        onChange={(e) => setForm({ ...form, email: e.target.value })}
+        required
+      />
       <label>Source</label>
-      <input onChange={(e) => setForm({ ...form, source: e.target.value })} />
+      <input
+        value={form.source}
+        onChange={(e) => setForm({ ...form, source: e.target.value })}
+      />
       <button type="submit">Send</button>
     </form>
   );
