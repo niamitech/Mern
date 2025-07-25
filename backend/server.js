@@ -12,6 +12,8 @@ app.use(express.json());
 
 const statusRoutes = require('./routes/status');
 app.use('/api/status', statusRoutes);
+const enrichRoutes = require('./routes/enrich');
+app.use('/api/enrich', enrichRoutes);
 
 
 // DB Connection
