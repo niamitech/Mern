@@ -1,34 +1,54 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
+import RegisterForm from './components/RegisterForm';
+import LoginForm from './components/LoginForm';
+import PasswordResetForm from './components/PasswordResetForm';
 
-const API = process.env.REACT_APP_API_URL;
-function App() {
-  const [status, setStatus] = useState(null);
+export default function App() {
+  const [stage, setStage] = useState('login');
+  const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    axios.get(`${API}/api/status`)
-      .then((res) => {
-        setStatus(res.data);
-      })
-      .catch((err) => {
-        setStatus({ success: false, message: "Failed to fetch API status" });
-      });
-  }, []);
+  const onLoginSuccess = data => {
+    setUser(data);
+  };
+
+  if (user) {
+    return (
+      <div>
+        <h1>Welcome, {user.username}</h1>
+        <button onClick={() => { setUser(null); setStage('login'); }}>Logout</button>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>MERN Stack Health Check</h1>
-      {status ? (
-        <div>
-          <p><strong>Status:</strong> {status.success ? '✅ OK' : '❌ Failed'}</p>
-          <p><strong>Message:</strong> {status.message}</p>
-          <p><strong>Time:</strong> {new Date(status.timestamp).toLocaleString()}</p>
-        </div>
-      ) : (
-        <p>Loading API status...</p>
+    <div>
+      {stage === 'login' && (
+        <>
+          <LoginForm onLoginSuccess={onLoginSuccess} />
+          <p>
+            Don't have an account? <button onClick={() => setStage('register')}>Register</button>
+          </p>
+          <p>
+            Forgot password? <button onClick={() => setStage('reset')}>Reset Password</button>
+          </p>
+        </>
+      )}
+      {stage === 'register' && (
+        <>
+          <RegisterForm onRegistered={() => setStage('login')} />
+          <p>
+            Already have an account? <button onClick={() => setStage('login')}>Login</button>
+          </p>
+        </>
+      )}
+      {stage === 'reset' && (
+        <>
+          <PasswordResetForm />
+          <p>
+            Remembered password? <button onClick={() => setStage('login')}>Login</button>
+          </p>
+        </>
       )}
     </div>
   );
 }
-
-export default App;
