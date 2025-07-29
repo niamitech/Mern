@@ -1,32 +1,58 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import RegisterForm from './RegisterForm';
+import LoginForm from './LoginForm';
+import UserProfile from './UserProfile';
 import axios from 'axios';
 
-const API = process.env.REACT_APP_API_URL;
 function App() {
-  const [status, setStatus] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token') || '');
+  const [view, setView] = useState(token ? 'profile' : 'login');
 
-  useEffect(() => {
-    axios.get(`${API}/api/status`)
-      .then((res) => {
-        setStatus(res.data);
-      })
-      .catch((err) => {
-        setStatus({ success: false, message: "Failed to fetch API status" });
-      });
-  }, []);
+  const logout = () => {
+    localStorage.removeItem('token');
+    setToken('');
+    setView('login');
+  };
+
+  const handleLogin = async (email, password) => {
+    try {
+      const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      localStorage.setItem('token', res.data.token);
+      setToken(res.data.token);
+      setView('profile');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Login failed');
+    }
+  };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>MERN Stack Health Check</h1>
-      {status ? (
-        <div>
-          <p><strong>Status:</strong> {status.success ? '✅ OK' : '❌ Failed'}</p>
-          <p><strong>Message:</strong> {status.message}</p>
-          <p><strong>Time:</strong> {new Date(status.timestamp).toLocaleString()}</p>
-        </div>
-      ) : (
-        <p>Loading API status...</p>
+    <div style={{ maxWidth: 400, margin: 'auto', padding: 20 }}>
+      <h2>Secure Password Hashing Demo</h2>
+
+      {!token && (
+        <>
+          {view === 'login' && (
+            <>
+              <LoginForm onLogin={handleLogin} />
+              <p>
+                Don't have an account?{' '}
+                <button onClick={() => setView('register')}>Register</button>
+              </p>
+            </>
+          )}
+          {view === 'register' && (
+            <>
+              <RegisterForm onRegisterSuccess={() => setView('login')} />
+              <p>
+                Already registered?{' '}
+                <button onClick={() => setView('login')}>Login</button>
+              </p>
+            </>
+          )}
+        </>
       )}
+
+      {token && <UserProfile token={token} onLogout={logout} />}
     </div>
   );
 }
